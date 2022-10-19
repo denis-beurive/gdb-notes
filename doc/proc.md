@@ -49,6 +49,9 @@ You can see that the stack starts at `0x7ffffffde000` (included) and ends at `0x
 `0x7ffffffde000` (included) and `0x7ffffffff000 - 0x1 = 0x7FFFFFFFEFFF` (included). 
 
 > You may want to read [this article](bc.md) that shows how to use "`bc`" to perform hexadecimal calculations.
+>
+> You can use [this Perl script](../tools/mapping.pl) for help.
+> Example: `perl mapping.pl --address=0x7ffff7d5c000`
 
 ## Searching for an expression
 
@@ -64,5 +67,6 @@ Example:
 ```
 
 > See: https://sourceware.org/gdb/onlinedocs/gdb/Searching-Memory.html
-
-
+>
+> You can use [this Perl script](../tools/mapping.pl) for help.
+> Example: `perl mapping.pl --address=0x7ffff7d5c000`
