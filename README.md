@@ -9,7 +9,7 @@ Start the program execution: `r`
 * [Managing breakpoints](doc/breakpoints.md)
 * [Getting information on variables](doc/information-on-variables.md)
 * [Print the memory content](doc/memory.md)
-* [Find the head and stack locations](doc/proc.md)
+* [Find the heap and stack locations](doc/proc.md)
 * [Using `bc` for hexadecimal calculations](doc/bc.md)
 
 

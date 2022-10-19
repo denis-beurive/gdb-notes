@@ -48,5 +48,21 @@ You can see that the head starts at `0x5555555a4000` (included) and ends at `0x5
 You can see that the stack starts at `0x7ffffffde000` (included) and ends at `0x7ffffffff000` (excluded). That is:
 `0x7ffffffde000` (included) and `0x7ffffffff000 - 0x1 = 0x7FFFFFFFEFFF` (included). 
 
-
 > You may want to read [this article](bc.md) that shows how to use "`bc`" to perform hexadecimal calculations.
+
+## Searching for an expression
+
+Example:
+
+```
+(gdb) find 0x5555555A4000, 0x5555555C4FFF, "world"
+0x5555555a53a0
+1 pattern found.
+(gdb) find /10 0x5555555A4000, 0x5555555C4FFF, "world"
+0x5555555a53a0
+1 pattern found.
+```
+
+> See: https://sourceware.org/gdb/onlinedocs/gdb/Searching-Memory.html
+
+
