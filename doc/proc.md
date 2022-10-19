@@ -49,4 +49,4 @@ You can see that the stack starts at `0x7ffffffde000` (included) and ends at `0x
 `0x7ffffffde000` (included) and `0x7ffffffff000 - 0x1 = 0x7FFFFFFFEFFF` (included). 
 
 
-> You may want to read the article that shows how to use "`bc`" to perform hexadecimal calculations.
+> You may want to read [this article](bc.md) that shows how to use "`bc`" to perform hexadecimal calculations.
