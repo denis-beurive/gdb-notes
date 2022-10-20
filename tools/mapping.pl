@@ -96,7 +96,7 @@ while (<$mapping_fd>) {
     # printf("%s\n", $_);
     if ($_ =~ m/^\s+(0x[0-9a-f]+)\s+(0x[0-9a-f]+)\s+(0x[0-9a-f]+)\s+(0x[0-9a-f]+)\s+([a-z\-]+)\s+\[([^\]]+)\]\s*$/) {
         next unless ($6 eq 'heap' || $6 eq 'stack');
-        my $location = $6 eq &K_HEAP ? &K_HEAP : &K_STACK;
+        my $location = $6 eq 'heap' ? &K_HEAP : &K_STACK;
         my $start = $1;
         my $stop = $2;
         printf("%-5s: %-18s -> %-18s\n", $location, $start, $stop) if (defined $cli_verbose);
