@@ -48,7 +48,7 @@ use warnings FATAL => 'all';
 use Getopt::Long;
 use bignum qw/hex/;
 use Data::Dumper;
-use constant MAPPING_DEFAULT_PATH => 'map.txt';
+use constant SECTIONS_DEFAULT_PATH => 'map.txt';
 use constant K_START => 'start';
 use constant K_STOP => 'stop';
 use constant K_HEAP => 'heap';
@@ -59,11 +59,11 @@ sub help {
     print("Look for the heap and the stack within the output of the GDB command \"info proc map\"\n\n");
     print("[perl] mapping.pl [--path=<path to map file>] [--address=<address to look at>] [--verbose]\n");
     print("[perl] mapping.pl --help\n\n");
-    printf("Default map file: \"%s\"\n", MAPPING_DEFAULT_PATH);
+    printf("Default map file: \"%s\"\n", SECTIONS_DEFAULT_PATH);
 }
 
 # Parse the command line.
-my $cli_mapping_path = MAPPING_DEFAULT_PATH;
+my $cli_mapping_path = SECTIONS_DEFAULT_PATH;
 my $cli_verbose = undef;
 my $cli_help = undef;
 my $cli_address = undef;

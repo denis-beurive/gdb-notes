@@ -11,5 +11,6 @@ Start the program execution: `r`
 * [Print the memory content](doc/memory.md)
 * [Find the heap and stack locations](doc/proc.md)
 * [Using `bc` for hexadecimal calculations](doc/bc.md)
+* [Using `perl` for hexadecimal calculations](doc/perl-hex.pl)
 
 
