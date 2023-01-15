@@ -10,7 +10,8 @@ Start the program execution: `r`
 * [Getting information on variables](doc/information-on-variables.md)
 * [Print the memory content](doc/memory.md)
 * [Find the heap and stack locations](doc/proc.md)
+* [GDB automation](doc/automation.md)
+* [Logging into a file](doc/logging.md)
 * [Using `bc` for hexadecimal calculations](doc/bc.md)
 * [Using `perl` for hexadecimal calculations](doc/perl-hex.md)
-
 
