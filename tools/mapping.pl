@@ -3,25 +3,25 @@
 # Usage:
 #
 #   perl mapping.pl --help
-#   perl mapping.pl --address=0x7ffff7d5c000
-#   perl mapping.pl --path=map.txt --address=0x7ffff7d5c000
+#   perl mapping.pl -- 0x7ffff7fa5000 0x7ffff7d5c000 0x5555555a5000 0x555555554000
+#   perl mapping.pl --path=map.txt -- 0x7ffff7f74000 0x55555555a000 0x5555555A9000 0x5555555A8000
 #
 # The map file must be a copy/paste of the GDB output for the command "info proc map".
 # For example:
 #
-#   process 4700
-#   Mapped address spaces:
+# process 11932
+# Mapped address spaces:
 #
 #           Start Addr           End Addr       Size     Offset  Perms  objfile
-#       0x555555554000     0x55555555a000     0x6000        0x0  r--p   /home/denis/Documents/github/rust-playground/variables/target/debug/variables
-#       0x55555555a000     0x555555591000    0x37000     0x6000  r-xp   /home/denis/Documents/github/rust-playground/variables/target/debug/variables
-#       0x555555591000     0x55555559f000     0xe000    0x3d000  r--p   /home/denis/Documents/github/rust-playground/variables/target/debug/variables
-#       0x5555555a0000     0x5555555a3000     0x3000    0x4b000  r--p   /home/denis/Documents/github/rust-playground/variables/target/debug/variables
-#       0x5555555a3000     0x5555555a4000     0x1000    0x4e000  rw-p   /home/denis/Documents/github/rust-playground/variables/target/debug/variables
-#       0x5555555a4000     0x5555555c5000    0x21000        0x0  rw-p   [heap]
+#       0x555555554000     0x55555555a000     0x6000        0x0  r--p   /home/denis/Documents/github/tester/src/string_vs_str
+#       0x55555555a000     0x555555593000    0x39000     0x6000  r-xp   /home/denis/Documents/github/tester/src/string_vs_str
+#       0x555555593000     0x5555555a1000     0xe000    0x3f000  r--p   /home/denis/Documents/github/tester/src/string_vs_str
+#       0x5555555a1000     0x5555555a4000     0x3000    0x4c000  r--p   /home/denis/Documents/github/tester/src/string_vs_str
+#       0x5555555a4000     0x5555555a5000     0x1000    0x4f000  rw-p   /home/denis/Documents/github/tester/src/string_vs_str
+#       0x5555555a5000     0x5555555c6000    0x21000        0x0  rw-p   [heap]
 #       0x7ffff7d5c000     0x7ffff7d5f000     0x3000        0x0  rw-p
 #       0x7ffff7d5f000     0x7ffff7d87000    0x28000        0x0  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
-#       0x7ffff7d87000     0x7ffff7f1c000   0x195000    0x28000  r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
+#       0x7ffff7d87000     0x7ffff7f1c000   0x195000    0x28000  0x7ffff7f74000r-xp   /usr/lib/x86_64-linux-gnu/libc.so.6
 #       0x7ffff7f1c000     0x7ffff7f74000    0x58000   0x1bd000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
 #       0x7ffff7f74000     0x7ffff7f78000     0x4000   0x214000  r--p   /usr/lib/x86_64-linux-gnu/libc.so.6
 #       0x7ffff7f78000     0x7ffff7f7a000     0x2000   0x218000  rw-p   /usr/lib/x86_64-linux-gnu/libc.so.6
@@ -48,16 +48,13 @@ use warnings FATAL => 'all';
 use Getopt::Long;
 use bignum qw/hex/;
 use Data::Dumper;
+use List::Util qw(max);
 use constant SECTIONS_DEFAULT_PATH => 'map.txt';
 use constant K_START => 'start';
 use constant K_STOP => 'stop';
-use constant K_HEAP => 'heap';
-use constant K_STACK => 'stack';
-
 
 sub help {
-    print("Look for the heap and the stack within the output of the GDB command \"info proc map\"\n\n");
-    print("[perl] mapping.pl [--path=<path to map file>] [--address=<address to look at>] [--verbose]\n");
+    print("[perl] mapping.pl [--path=<path to map file>] [--verbose] -- <address to look at>\n");
     print("[perl] mapping.pl --help\n\n");
     printf("Default map file: \"%s\"\n", SECTIONS_DEFAULT_PATH);
 }
@@ -66,11 +63,9 @@ sub help {
 my $cli_mapping_path = SECTIONS_DEFAULT_PATH;
 my $cli_verbose = undef;
 my $cli_help = undef;
-my $cli_address = undef;
 if (! GetOptions (
     'path=s'    => \$cli_mapping_path,
     'help'      => \$cli_help,
-    'address=s' => \$cli_address,
     'verbose'   => \$cli_verbose)) {
     print("Invalid command line!\n\n");
     help();
@@ -79,6 +74,11 @@ if (! GetOptions (
 if (defined $cli_help) {
     help();
     exit(0);
+}
+
+if (0 == int(@ARGV)) {
+    printf("Invalid command line: no addresses given!\n");
+    exit(1);
 }
 
 # Open map file.
@@ -90,40 +90,69 @@ if (! open($mapping_fd, '<', $cli_mapping_path)) {
 }
 
 # Parse the map file.
-my %data = ();
+my %locations_data = ();
+my @locations = ();
+my $uncharted_idx = 1;
 while (<$mapping_fd>) {
     chomp;
-    # printf("%s\n", $_);
-    if ($_ =~ m/^\s+(0x[0-9a-f]+)\s+(0x[0-9a-f]+)\s+(0x[0-9a-f]+)\s+(0x[0-9a-f]+)\s+([a-z\-]+)\s+\[([^\]]+)\]\s*$/) {
-        next unless ($6 eq 'heap' || $6 eq 'stack');
-        my $location = $6 eq 'heap' ? &K_HEAP : &K_STACK;
+    if ($_ =~ m/^\s+(0x[0-9a-f]+)\s+(0x[0-9a-f]+)\s+(0x[0-9a-f]+)\s+(0x[0-9a-f]+)\s+([a-z\-]+)\s+(.+)\s*$/) {
         my $start = $1;
         my $stop = $2;
-        printf("%-5s: %-18s -> %-18s\n", $location, $start, $stop) if (defined $cli_verbose);
-        if (exists($data{$location})) {
-            printf("Unexpected error: location \"%s\" found twice!\n", $location);
-            exit(1);
+        my $location = $6;
+        $location =~ s/(^\[|\]$)//g;
+        if ($location =~ m/^\s*$/) { $location = sprintf("unnamed-%s", $uncharted_idx++) }
+
+        if (exists($locations_data{$location})) {
+            $locations_data{$location}->{&K_STOP} = hex($stop) - hex("0x1");
+            next;
         }
-        $data{$location} = {
+        $locations_data{$location} = {
             &K_START => hex($start),
             &K_STOP  => hex($stop) - hex("0x1")
         };
+        push(@locations, $location);
     }
 }
 
-
-printf("HEAP:  [0x%X, 0x%X]\n", $data{&K_HEAP}->{&K_START}, $data{&K_HEAP}->{&K_STOP});
-printf("STACK: [0x%X, 0x%X]\n\n", $data{&K_STACK}->{&K_START}, $data{&K_STACK}->{&K_STOP});
-printf("Search HEAP:  find 0x%X, 0x%X, \"expr\"\n", $data{&K_HEAP}->{&K_START}, $data{&K_HEAP}->{&K_STOP});
-printf("Search STACK: find 0x%X, 0x%X, \"expr\"\n\n", $data{&K_STACK}->{&K_START}, $data{&K_STACK}->{&K_STOP});
-exit(0) unless(defined $cli_address);
-
-$cli_address = hex($cli_address);
-if ($cli_address >= $data{&K_HEAP}->{&K_START} and $cli_address <= $data{&K_HEAP}->{&K_STOP}) {
-    printf("0x%X is in the heap\n", $cli_address);
-} elsif ($cli_address >= $data{&K_STACK}->{&K_START} and $cli_address <= $data{&K_STACK}->{&K_STOP}) {
-    printf("0x%X is in the stack\n", $cli_address);
-} else {
-    printf("0x%X is neither in the heap nor in the stack\n", $cli_address);
+my @addresses = sort map { hex $_ } @ARGV;
+sub find_location {
+    my ($mapping, $address) = @_;
+    foreach my $location (@locations) {
+        my $start = $mapping->{$location}->{&K_START};
+        my $stop = $mapping->{$location}->{&K_STOP};
+        if ($address >= $start and $address <= $stop) {
+            return($location)
+        }
+    }
+    printf("\n\n");
+    return(undef);
 }
+
+my %found_locations = ();
+foreach my $address (@addresses) {
+    my $location = find_location(\%locations_data, $address);
+    if (! defined($location)) {
+        printf("Cannot find location for address 0x%s\n", $address);
+        next;
+    }
+    $found_locations{$location} = [] unless exists($found_locations{$location});
+    push(@{$found_locations{$location}}, $address);
+}
+
+my $maximum = max(map { length($_) } @locations);
+printf("%s\n", '-' x ($maximum + 60));
+foreach my $location (@locations) {
+    printf("%${maximum}s: 0x%-25X -> 0x%-25X\n",
+        $location,
+        $locations_data{$location}->{start},
+        $locations_data{$location}->{stop}
+    );
+    if (exists($found_locations{$location})) {
+        foreach my $address (@{$found_locations{$location}}) {
+            printf("%${maximum}s  0x%X\n", '', $address);
+        }
+    }
+}
+printf("%s\n", '-' x ($maximum + 60));
+
 
