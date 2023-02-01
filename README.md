@@ -11,6 +11,7 @@ Start the program execution: `r`
 * [Print the memory content](doc/memory.md)
 * [Find the heap and stack locations](doc/proc.md)
 * [GDB automation](doc/automation.md)
+* [Auto stepping](doc/auto-stepping.md)
 * [Logging into a file](doc/logging.md)
 * [Using `bc` for hexadecimal calculations](doc/bc.md)
 * [Using `perl` for hexadecimal calculations](doc/perl-hex.md)
