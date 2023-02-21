@@ -17,7 +17,24 @@ define step_mult
     end
 end
 
-start
+# To see all the files that have been used for the compilation:
+#
+#    info sources
+#
+# To see all the functions included within the executable:
+#
+#    info functions
+
+# We don't want to step into the following files and functions:
+skip -file load.c
+skip -gfile  /tmp/jansson-2.13/src/*
+skip function *curl*
+
+# We could omit the following line (and start at the "beginning" of the program).
+# But we are not interested in the beginning.
+b sfa_api.c:831
+
+r
 step_mult 10000
 ```
 
