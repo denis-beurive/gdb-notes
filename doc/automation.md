@@ -3,7 +3,7 @@
 Create the GDB command file below "`test.gdb`":
 
 ```gdb
-# rust-gdb --batch --command=test.gdb --args ./string_vs_str
+# rust-gdb --batch --command=test.gdb --args ./string_vs_str arg1 arg2
 
 set width 0
 set height 0
@@ -44,7 +44,9 @@ print my_str.data_ptr
 Execute the command file on the executable "`string_vs_str.exe`".
 
 ```bash
-rust-gdb --batch --command=test.gdb --args ./string_vs_str.exe
+rust-gdb --batch --command=test.gdb --args ./string_vs_str.exe arg1 arg2
 ```
 
 > Here, we use `rust-gdb`, but the procedure is identical for `gdb`.
+>
+> Please note that, if the executable takes parameters, we simply put them to the end of the command line (`arg1 arg2 ...`).
